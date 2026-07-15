@@ -1,0 +1,11 @@
+record_id,issue
+R1002,Missing required field(s): address
+R1003,Missing required field(s): full_name
+R1003,Duplicate ID number (ID-90112) shared with another record
+R1004,"High-value transaction ($10,500.00) — flagged for review"
+R1005,Duplicate ID number (ID-90112) shared with another record
+R1006,"High-value transaction ($15,000.00) — flagged for review"
+R1008,Missing required field(s): date_of_birth
+R1009,Missing required field(s): id_number
+R1010,"High-value transaction ($11,250.00) — flagged for review"
+R1012,Duplicate ID number (ID-90112) shared with another record
