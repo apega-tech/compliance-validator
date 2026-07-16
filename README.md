@@ -1,12 +1,14 @@
 # Compliance Data Validator
 
+🔗 **Live Demo:** [compliance-validator demo](https://apega-tech.github.io/compliance-validator/) — paste your own CSV and validate it live in the browser
+
 A rule-based Python tool that scans customer/transaction records for
 data-quality and risk issues — missing required fields, duplicate ID
 numbers, and transactions above a reporting threshold. Inspired by the
 manual review work done in BSA/AML and KYC compliance roles, rebuilt as
 an automated check.
 
-**Note:** `sample_records.csv` is synthetic data created for portfolio
+**Note:** `sample_records.csv` is synthetic data created for the portfolio
 purposes — it does not contain real customer information.
 
 ## Stack
