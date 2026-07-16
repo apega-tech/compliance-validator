@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compliance Data Validator — Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c1526; --panel:#121e35; --line:#243456; --text:#e8edf7; --text-dim:#8ea0c2;
+    --amber:#e8a33d; --teal:#5fd4c6; --danger:#e2645f; --live:#5fd4a0;
+  }
+  *{box-sizing:border-box;}
+  body{ background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; margin:0; padding:40px 20px; }
+  .wrap{ max-width:900px; margin:0 auto; }
+  .badge{ display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--live); border:1px solid rgba(95,212,160,0.3); padding:5px 11px; border-radius:20px; margin-bottom:16px; }
+  .badge .dot{ width:6px; height:6px; border-radius:50%; background:var(--live); }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:28px; margin:0 0 6px; }
+  .subtitle{ color:var(--text-dim); font-size:14px; margin-bottom:8px; }
+  .note{ background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.3); color:var(--amber); font-size:13px; padding:10px 14px; border-radius:6px; margin-bottom:24px; }
+  .links{ margin-bottom:28px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+  .links a{ color:var(--teal); text-decoration:none; margin-right:16px; }
+  textarea{
+    width:100%; height:180px; background:var(--panel); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; resize:vertical;
+  }
+  .btn-row{ display:flex; gap:10px; margin:14px 0 28px; flex-wrap:wrap; }
+  .btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; background:var(--amber); color:#0c1526; border:none; padding:10px 18px; border-radius:4px; cursor:pointer; }
+  .btn.secondary{ background:transparent; border:1px solid var(--line); color:var(--text); }
+  .stat-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:24px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; }
+  .stat .k{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .stat .v{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--teal); }
+  table{ width:100%; border-collapse:collapse; background:var(--panel); border-radius:6px; overflow:hidden; }
+  th, td{ text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  th{ color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
+  td.record-id{ font-family:'JetBrains Mono',monospace; color:var(--teal); }
+  .issue-tag{ display:inline-block; font-size:12px; padding:3px 9px; border-radius:10px; margin:2px 4px 2px 0; }
+  .issue-tag.missing{ background:rgba(232,163,61,0.14); color:var(--amber); }
+  .issue-tag.duplicate{ background:rgba(226,100,95,0.14); color:var(--danger); }
+  .issue-tag.highvalue{ background:rgba(95,212,198,0.14); color:var(--teal); }
+  footer{ margin-top:30px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badge"><span class="dot"></span>LIVE DEMO — RUNS IN YOUR BROWSER</div>
+  <h1>Compliance Data Validator</h1>
+  <div class="subtitle">Paste CSV records below and validate them against the same rules as the Python version</div>
+  <div class="note">All validation happens locally in your browser — nothing is uploaded anywhere. This is a JavaScript port of the original Python logic for a live demo; the source project below runs the real Python version.</div>
+  <div class="links">
+    <a href="https://github.com/apega-tech/compliance-validator" target="_blank">View Source →</a>
+    <a href="https://apega-tech.github.io" target="_blank">← Back to Portfolio</a>
+  </div>
+
+  <textarea id="csv-input" spellcheck="false"></textarea>
+  <div class="btn-row">
+    <button class="btn" onclick="runValidation()">Validate Records</button>
+    <button class="btn secondary" onclick="loadSample()">Load Sample Data</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<footer>Live demo of a project by Anastacia Pena Galicia — <a href="https://apega-tech.github.io" style="color:var(--teal);">apega-tech.github.io</a></footer>
+
+<script>
+  const SAMPLE_CSV = `record_id,full_name,date_of_birth,id_number,address,transaction_amount,transaction_date
+R1001,Maria Gonzalez,1988-04-12,ID-88213,142 Willow St Apt 3B,850.00,2026-01-05
+R1002,James Carter,1975-11-02,ID-44219,,1200.50,2026-01-06
+R1003,,1990-06-30,ID-90112,89 Maple Ave,300.00,2026-01-06
+R1004,Aisha Bello,1982-02-18,ID-77410,15 Oak Ln,10500.00,2026-01-07
+R1005,Wei Zhang,2001-09-09,ID-90112,204 Pine Rd,450.75,2026-01-08
+R1006,Robert Klein,1969-01-30,ID-33210,77 Birch Blvd,15000.00,2026-01-08
+R1007,Linda Nguyen,1995-07-22,ID-55321,300 Cedar Ct,220.00,2026-01-09
+R1008,Carlos Ruiz,,ID-61234,410 Elm St,675.25,2026-01-09
+R1009,Fatima Ahmed,1978-12-05,,58 Spruce Way,980.00,2026-01-10
+R1010,Daniel Osei,1992-03-14,ID-70981,19 Chestnut Dr,11250.00,2026-01-10
+R1011,Sofia Moretti,1985-08-08,ID-40122,66 Poplar Pl,150.00,2026-01-11
+R1012,Wei Zhang,2001-09-09,ID-90112,204 Pine Rd,300.00,2026-01-12`;
+
+  const REQUIRED_FIELDS = ["full_name", "date_of_birth", "id_number", "address"];
+  const HIGH_VALUE_THRESHOLD = 10000;
+
+  function loadSample(){
+    document.getElementById("csv-input").value = SAMPLE_CSV;
+  }
+
+  function parseCSV(text){
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim());
+    return lines.slice(1).map(line => {
+      const cells = line.split(",");
+      const row = {};
+      headers.forEach((h, i) => row[h] = (cells[i] || "").trim());
+      return row;
+    });
+  }
+
+  function runValidation(){
+    const text = document.getElementById("csv-input").value.trim();
+    const resultsEl = document.getElementById("results");
+    if (!text) {
+      resultsEl.innerHTML = `<div class="note" style="color:var(--danger); border-color:var(--danger);">Paste some CSV data first, or click "Load Sample Data".</div>`;
+      return;
+    }
+
+    const records = parseCSV(text);
+    const idCounts = {};
+    records.forEach(r => {
+      const id = r.id_number;
+      if (id) idCounts[id] = (idCounts[id] || 0) + 1;
+    });
+
+    const flagged = [];
+    records.forEach(r => {
+      const issues = [];
+      const missing = REQUIRED_FIELDS.filter(f => !r[f]);
+      if (missing.length) issues.push({ type: "missing", label: `Missing: ${missing.join(", ")}` });
+
+      const amount = parseFloat(r.transaction_amount);
+      if (!isNaN(amount) && amount >= HIGH_VALUE_THRESHOLD) {
+        issues.push({ type: "highvalue", label: `High-value ($${amount.toLocaleString()})` });
+      }
+
+      if (r.id_number && idCounts[r.id_number] > 1) {
+        issues.push({ type: "duplicate", label: `Duplicate ID (${r.id_number})` });
+      }
+
+      if (issues.length) flagged.push({ id: r.record_id, issues });
+    });
+
+    let html = `
+      <div class="stat-row">
+        <div class="stat"><div class="k">Records Checked</div><div class="v">${records.length}</div></div>
+        <div class="stat"><div class="k">Flagged</div><div class="v">${flagged.length}</div></div>
+        <div class="stat"><div class="k">Clean</div><div class="v">${records.length - flagged.length}</div></div>
+      </div>
+    `;
+
+    if (flagged.length === 0) {
+      html += `<div class="note" style="color:var(--live); border-color:rgba(95,212,160,0.4);">No issues found — all records passed validation.</div>`;
+    } else {
+      html += `<table><thead><tr><th>Record ID</th><th>Issues</th></tr></thead><tbody>`;
+      flagged.forEach(f => {
+        const tags = f.issues.map(i => `<span class="issue-tag ${i.type}">${i.label}</span>`).join("");
+        html += `<tr><td class="record-id">${f.id}</td><td>${tags}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+
+    resultsEl.innerHTML = html;
+  }
+
+  loadSample();
+</script>
+</body>
+</html>
